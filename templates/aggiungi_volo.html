@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Volo - Compagnia {{ compagnia.nome }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7f9; margin: 0; padding: 0; }
+        .header { background: white; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
+        .container { max-width: 900px; margin: 30px auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 25px; }
+        h1 { color: #2c3e50; }
+        form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .full { grid-column: 1 / -1; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; color: #34495e; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .actions { text-align: right; margin-top: 10px; }
+        .btn { background: #007bff; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        .flash { background: #fdecea; color: #b71c1c; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{{ url_for('main.home') }}">
+            <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" style="max-height:60px;">
+        </a>
+        <div>
+            <a href="{{ url_for('main.statistiche') }}" class="btn btn-secondary" style="text-decoration:none;">📊 Statistiche</a>
+            <a href="{{ url_for('main.logout') }}" class="btn btn-secondary" style="text-decoration:none; background:#e74c3c;">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>➕ Aggiungi un nuovo volo</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for m in messages %}
+                <div class="flash">{{ m }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div>
+                <label for="codice_volo">Codice volo</label>
+                <input id="codice_volo" name="codice_volo" type="text" required value="{{ (form and form.get('codice_volo')) or '' }}">
+            </div>
+            <div>
+                <label for="id_aereo">Aereo</label>
+                <select id="id_aereo" name="id_aereo" required>
+                    <option value="">Seleziona aereo</option>
+                    {% for a in aerei %}
+                        <option value="{{ a.id_aereo }}" {% if form and form.get('id_aereo')|int == a.id_aereo %}selected{% endif %}>#{{ a.id_aereo }} - {{ a.modello }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="partenza_aeroporto">Aeroporto di partenza</label>
+                <select id="partenza_aeroporto" name="partenza_aeroporto" required>
+                    <option value="">Seleziona partenza</option>
+                    {% for ap in aeroporti %}
+                        <option value="{{ ap.codice_iata }}" {% if form and form.get('partenza_aeroporto') == ap.codice_iata %}selected{% endif %}>{{ ap.codice_iata }} - {{ ap.citta }} ({{ ap.nome }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="arrivo_aeroporto">Aeroporto di arrivo</label>
+                <select id="arrivo_aeroporto" name="arrivo_aeroporto" required>
+                    <option value="">Seleziona arrivo</option>
+                    {% for ap in aeroporti %}
+                        <option value="{{ ap.codice_iata }}" {% if form and form.get('arrivo_aeroporto') == ap.codice_iata %}selected{% endif %}>{{ ap.codice_iata }} - {{ ap.citta }} ({{ ap.nome }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="prezzo_economy">Prezzo Economy</label>
+                <input id="prezzo_economy" name="prezzo_economy" type="number" step="0.01" min="0.01" required value="{{ (form and form.get('prezzo_economy')) or '' }}">
+            </div>
+            <div>
+                <label for="prezzo_business">Prezzo Business</label>
+                <input id="prezzo_business" name="prezzo_business" type="number" step="0.01" min="0.01" required value="{{ (form and form.get('prezzo_business')) or '' }}">
+            </div>
+            <div>
+                <label for="prezzo_first">Prezzo First</label>
+                <input id="prezzo_first" name="prezzo_first" type="number" step="0.01" min="0.01" required value="{{ (form and form.get('prezzo_first')) or '' }}">
+            </div>
+            <div>
+                <label for="orario_partenza">Partenza</label>
+                <input id="orario_partenza" name="orario_partenza" type="datetime-local" required value="{{ (form and form.get('orario_partenza')) or '' }}">
+            </div>
+            <div>
+                <label for="orario_arrivo">Arrivo</label>
+                <input id="orario_arrivo" name="orario_arrivo" type="datetime-local" required value="{{ (form and form.get('orario_arrivo')) or '' }}">
+            </div>
+            <div class="full actions">
+                <a class="btn btn-secondary" href="{{ url_for('main.home') }}" style="text-decoration:none;">Annulla</a>
+                <button type="submit" class="btn">Crea volo</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

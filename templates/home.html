@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Gestione Voli Aerei</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #ffffff;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 3rem;
+        }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .nav-card {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #000000;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+        }
+        .nav-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .nav-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .nav-desc {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .search-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #000000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .search-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .search-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-btn:hover {
+            background: #2980b9;
+        }
+        .login-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #219a52;
+            color: white;
+            text-decoration: none;
+        }
+        .profile-links {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .profile-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" style="max-width:800px; margin-bottom:1rem;">
+        <h2 style="font-size:1.8rem; color:#2c3e50; margin-bottom:1rem; font-style:italic;">"Mettiamo le ali anche ai quadrupedi, vola ovunque tu voglia"</h2>
+
+        <!-- Login/Profile links -->
+        <div class="profile-links">
+            {% if session.user_id %}
+                {% if session.user_type == 'passeggero' %}
+                    <a href="{{ url_for('main.profilo') }}" class="login-btn">👤 Profilo</a>
+                {% elif session.user_type == 'compagnia aerea' %}
+                    <a href="{{ url_for('main.statistiche') }}" class="login-btn">📊 Statistiche</a>
+                    <a href="{{ url_for('main.aggiungi_volo') }}" class="login-btn">➕ Aggiungi volo</a>
+                {% endif %}
+                <a href="{{ url_for('main.logout') }}" style="background: #e74c3c;" class="login-btn">🚪 Logout</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="login-btn">Accedi</a>
+            {% endif %}
+        </div>
+
+        <!-- Barra di ricerca voli -->
+        <div class="search-section">
+            <h2 style="margin-bottom:20px; color:#2c3e50;">Cerca Voli</h2>
+            <form action="{{ url_for('main.lista_voli') }}" method="GET" class="search-form">
+                <input type="text" name="partenza" placeholder="Città di partenza" class="search-input" required>
+                <input type="text" name="arrivo" placeholder="Città di arrivo" class="search-input" required>
+                <!-- Nuovo campo data: i risultati includeranno anche i 7 giorni successivi -->
+                <input type="date" name="data" class="search-input" required min="{{ today_str or '' }}" value="{{ today_str or '' }}" title="I risultati includeranno anche i 7 giorni successivi alla data scelta">
+                <button type="submit" class="search-btn">🔍 Cerca Voli</button>
+            </form>
+        </div>
+
+        <!-- Navigation grid -->
+        <div class="nav-grid">
+            <a href="{{ url_for('main.lista_voli') }}" class="nav-card">
+                <div class="nav-icon">✈️</div>
+                <div class="nav-title">Tutti i Voli</div>
+                <div class="nav-desc">Visualizza tutti i voli disponibili con dettagli su orari, prezzi e destinazioni</div>
+            </a>
+            <a href="{{ url_for('main.video') }}" class="nav-card">
+                <div class="nav-icon">🎬</div>
+                <div class="nav-title">Video</div>
+                <div class="nav-desc">Mentre aspetti la risposta di un amico</div>
+            </a>
+            {% if session.user_id and session.user_type == 'compagnia aerea' %}
+            <a href="{{ url_for('main.aggiungi_volo') }}" class="nav-card">
+                <div class="nav-icon">➕</div>
+                <div class="nav-title">Aggiungi Volo</div>
+                <div class="nav-desc">Crea un nuovo volo della tua compagnia inserendo orari, tratte e prezzi</div>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

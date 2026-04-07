@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selezione Posti - Volo {{ volo.codice_volo }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f9; color: #333; }
+        .header { background: white; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
+        .flight-header { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; text-align:center; }
+        .class-section { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05); margin-bottom:20px; }
+        .class-title { font-weight:bold; margin-bottom:10px; }
+        .seats { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .seat-item { border:1px solid #ddd; border-radius:8px; padding:10px; display:flex; align-items:center; justify-content:space-between; }
+        .seat-item.occupied { background:#f8d7da; border-color:#f5c6cb; color:#721c24; }
+        .seat-item.available { background:#ecf7ee; border-color:#cdeacd; color:#1e4620; }
+        .actions { text-align:center; margin-top:20px; }
+        .btn { background:#28a745; color:white; border:none; padding:12px 24px; border-radius:6px; cursor:pointer; font-size:16px; }
+        .btn:disabled { background:#9cc9a6; cursor:not-allowed; }
+        .link { background:#6c757d; color:white; padding:10px 16px; border-radius:6px; text-decoration:none; margin-left:10px; }
+        .flash { padding: 12px 16px; border-radius: 6px; margin: 10px 0; background: #e7f3ff; border:1px solid #b3d9ff; color:#0c3c78; }
+        .legend { display:flex; gap:20px; justify-content:center; margin:10px 0 20px; }
+        .tag { display:inline-block; padding:4px 8px; border-radius:4px; font-size:12px; }
+        .tag.green { background:#e6f4ea; border:1px solid #c7e0cc; color:#1e4620; }
+        .tag.red { background:#fdecea; border:1px solid #f5c6cb; color:#721c24; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <a href="{{ url_for('main.home') }}">
+        <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" style="max-height:60px;">
+    </a>
+    <div>
+        {% if session.user_id and session.user_type == 'passeggero' %}
+            <a href="{{ url_for('main.profilo') }}" class="link" style="background:#007bff;">👤 Profilo</a>
+        {% endif %}
+        <a href="{{ url_for('main.logout') }}" class="link" style="background:#e74c3c;">🚪 Logout</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="flight-header">
+        <h2>Seleziona un posto - Volo {{ volo.codice_volo }}</h2>
+        <div>{{ citta_partenza }} → {{ citta_arrivo }}</div>
+        <div style="margin-top:8px;">{{ nome_compagnia }} • {{ modello_aereo }} • Partenza: {{ volo.orario_partenza.strftime('%d/%m/%Y %H:%M') }}</div>
+        <div class="legend">
+            <span class="tag green">Disponibile</span>
+            <span class="tag red">Occupato</span>
+        </div>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <form method="POST" action="{{ url_for('main.scegli_extra', id_volo=volo.id_volo) }}">
+        {% for tipo_posto, posti in posti_per_tipo.items() %}
+            <div class="class-section">
+                <div class="class-title">
+                    {% if tipo_posto == 'first class' %}🥇 First Class (€{{ '%.2f'|format(volo.prezzo_first) }})
+                    {% elif tipo_posto == 'business' %}💼 Business (€{{ '%.2f'|format(volo.prezzo_business) }})
+                    {% else %}💺 Economy (€{{ '%.2f'|format(volo.prezzo_economy) }})
+                    {% endif %}
+                </div>
+                <div class="seats">
+                    {% for posto in posti %}
+                        <label class="seat-item {% if posto.occupato %}occupied{% else %}available{% endif %}">
+                            <span>Posto {{ posto.numero_posto }}</span>
+                            {% if not posto.occupato %}
+                                <input type="radio" name="id_posto" value="{{ posto.id_posto }}" required>
+                            {% else %}
+                                <input type="radio" disabled>
+                            {% endif %}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="actions">
+            <button type="submit" class="btn">➡️ Continua con gli extra</button>
+            <a href="{{ url_for('main.dettaglio_volo', id_volo=volo.id_volo) }}" class="link">← Dettagli Volo</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

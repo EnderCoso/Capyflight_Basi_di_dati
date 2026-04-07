@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scegli Extra - Volo {{ volo.codice_volo }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f7f9; margin:0; }
+    .header { background:#fff; padding:15px 20px; box-shadow:0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
+    .container { max-width: 900px; margin: 20px auto; background:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); padding: 20px; }
+    h1 { color:#2c3e50; margin:0 0 10px; }
+    .summary { background:#f8f9fa; border:1px solid #e1e5ea; border-radius:6px; padding:12px 14px; margin: 10px 0 20px; }
+    .extras { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; }
+    .extra-card { border:1px solid #e1e5ea; border-radius:8px; padding:12px; display:flex; gap:10px; align-items:center; }
+    .price { font-weight:bold; color:#27ae60; }
+    .actions { text-align:right; margin-top: 16px; display:flex; justify-content:space-between; align-items:center; }
+    .btn { background:#007bff; color:#fff; padding:10px 18px; border:none; border-radius:6px; cursor:pointer; }
+    .btn:hover { background:#0056b3; }
+    .link { background:#6c757d; color:#fff; padding:9px 14px; border-radius:6px; text-decoration:none; }
+    .total { font-size: 1.1em; }
+    .flash { padding: 10px 14px; border-radius: 6px; margin: 10px 0; background: #e7f3ff; border:1px solid #b3d9ff; color:#0c3c78; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="{{ url_for('main.home') }}"><img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" style="max-height:60px;"></a>
+    <div>
+      <a class="link" href="{{ url_for('main.selezione_posti', id_volo=volo.id_volo) }}">← Cambia posto</a>
+      <a class="link" href="{{ url_for('main.logout') }}" style="background:#e74c3c;">🚪 Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Scegli gli extra</h1>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="summary">
+      <div><strong>Volo:</strong> {{ volo.codice_volo }} • {{ volo.partenza_aeroporto }} → {{ volo.arrivo_aeroporto }}</div>
+      <div><strong>Posto:</strong> {{ posto.numero_posto }} • <strong>Classe:</strong> {{ classe_nome }}</div>
+      <div><strong>Prezzo base:</strong> €<span id="prezzo_base">{{ '%.2f'|format(prezzo_base) }}</span></div>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.conferma_prenotazione', id_volo=volo.id_volo) }}" id="extraForm">
+      <input type="hidden" name="id_posto" value="{{ posto.id_posto }}">
+
+      <div class="extras">
+        {% for e in extra_catalogo %}
+        <label class="extra-card">
+          <input type="checkbox" name="extras" value="{{ e.code }}" data-price="{{ '%.2f'|format(e.prezzo) }}">
+          <div>
+            <div>{{ e.nome }}</div>
+            <div class="price">€{{ '%.2f'|format(e.prezzo) }}</div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="actions">
+        <div class="total">
+          Totale: €<span id="totale">{{ '%.2f'|format(prezzo_base) }}</span>
+        </div>
+        <div>
+          <a href="{{ url_for('main.selezione_posti', id_volo=volo.id_volo) }}" class="link">← Indietro</a>
+          <button type="submit" class="btn">Conferma prenotazione</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      const base = parseFloat(document.getElementById('prezzo_base').textContent);
+      const totalEl = document.getElementById('totale');
+      const checkboxes = document.querySelectorAll('input[name="extras"]');
+      function recalc() {
+        let sum = base;
+        checkboxes.forEach(cb => { if (cb.checked) sum += parseFloat(cb.dataset.price); });
+        totalEl.textContent = sum.toFixed(2);
+      }
+      checkboxes.forEach(cb => cb.addEventListener('change', recalc));
+    })();
+  </script>
+</body>
+</html>
+

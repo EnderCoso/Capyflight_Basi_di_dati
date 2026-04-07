@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Compagnie - Voli DB</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/voli">Voli</a>
+        <a href="/aeroporti">Aeroporti</a>
+        <a href="/compagnie">Compagnie</a>
+        <a href="/statistiche">Statistiche</a>
+    </div>
+
+    <h1>Lista Compagnie Aeree</h1>
+
+    {% if compagnie %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Codice IATA</th>
+                    <th>Nome</th>
+                    <th>Sito Web</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compagnia in compagnie %}
+                <tr>
+                    <td>{{ compagnia.id_compagnia }}</td>
+                    <td>{{ compagnia.codice_iata }}</td>
+                    <td>{{ compagnia.nome }}</td>
+                    <td>{% if compagnia.sito_web %}<a href="{{ compagnia.sito_web }}" target="_blank">{{ compagnia.sito_web }}</a>{% else %}N/A{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nessuna compagnia aerea trovata nel database.</p>
+    {% endif %}
+</body>
+</html>
+

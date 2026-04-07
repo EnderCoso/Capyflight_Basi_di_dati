@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Aeroporti - Voli DB</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/voli">Voli</a>
+        <a href="/aeroporti">Aeroporti</a>
+        <a href="/compagnie">Compagnie</a>
+        <a href="/statistiche">Statistiche</a>
+    </div>
+
+    <h1>Lista Aeroporti</h1>
+
+    {% if aeroporti %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Codice IATA</th>
+                    <th>Nome</th>
+                    <th>Città</th>
+                    <th>Nazione</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aeroporto in aeroporti %}
+                <tr>
+                    <td>{{ aeroporto.codice_iata }}</td>
+                    <td>{{ aeroporto.nome }}</td>
+                    <td>{{ aeroporto.citta }}</td>
+                    <td>{{ aeroporto.nazione }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nessun aeroporto trovato nel database.</p>
+    {% endif %}
+</body>
+</html>
+

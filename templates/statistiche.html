@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiche Compagnia - Voli DB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #ddd;
+        }
+        .header .logo {
+            height: 50px; /* Altezza del logo */
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .company-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #e74c3c;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .special-stat {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+        .revenue {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .no-stats {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        /* Stili semplificati per tabella riepilogo */
+        table.summary-stats {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table.summary-stats th, table.summary-stats td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table.summary-stats th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{{ url_for('main.home') }}">
+            <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo">
+        </a>
+    </div>
+    <div class="container">
+        <h1><i class="fas fa-chart-bar"></i> Statistiche per {{ nome_compagnia }}</h1>
+
+        <!-- Tabella riepilogo statistiche -->
+        <table class="summary-stats">
+            <thead>
+                <tr><th>Statistica</th><th>Valore</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Voli Totali</td><td>{{ statistiche['voli_totali'] }}</td></tr>
+                <tr><td>Passeggeri Totali</td><td>{{ statistiche['passeggeri_totali'] }}</td></tr>
+                <tr><td>Ricavi Totali</td><td>€{{ "%.2f"|format(statistiche['ricavi_totali']) }}</td></tr>
+                <tr><td>Ricavo Medio per Volo</td><td>€{{ "%.2f"|format(statistiche['ricavi_totali'] / statistiche['voli_totali'] if statistiche['voli_totali'] > 0 else 0) }}</td></tr>
+                <tr><td>Tratta più Presente</td><td>{{ statistiche['tratta_piu_presente'] }}</td></tr>
+            </tbody>
+        </table>
+
+        <h2>📊 Dettaglio Voli</h2>
+        {% if voli_stats and voli_stats|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Codice Volo</th>
+                    <th>Partenza</th>
+                    <th>Arrivo</th>
+                    <th>Passeggeri</th>
+                    <th class="revenue">Ricavi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for volo in voli_stats %}
+                <tr>
+                    <td>{{ volo.codice_volo }}</td>
+                    <td>{{ volo.orario_partenza.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ volo.orario_arrivo.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ volo.biglietti_venduti }}</td>
+                    <td class="revenue">€{{ "%.2f"|format(volo.ricavi_totali) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-stats">
+            <h2>📉 Nessun dato disponibile</h2>
+            <p>Non ci sono ancora statistiche disponibili per i voli di questa compagnia.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilo Passeggero - Voli DB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f9;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #007bff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        .nav-links a:hover {
+            background: #e7f3ff;
+        }
+        .logout-btn {
+            background: #e74c3c !important;
+            color: white !important;
+        }
+        .logout-btn:hover {
+            background: #c0392b !important;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .profile-info {
+            background: #fff;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #e6ebf1;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+        .no-tickets {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .route {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .price {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .extras {
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+        .profile-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .profile-meta {
+            color: #6c7a89;
+            font-size: 0.95rem;
+            margin: 4px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{{ url_for('main.home') }}">
+            <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo" style="max-height: 60px;">
+        </a>
+
+        <div class="nav-links">
+            <a href="{{ url_for('main.lista_voli') }}">✈️ Lista Voli</a>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>👤 Profilo Passeggero</h1>
+
+        <div class="profile-info">
+            {% if passeggero %}
+                <p class="profile-name">{{ passeggero.nome }} {{ passeggero.cognome }}</p>
+                <p class="profile-meta">{{ user.email }} • {{ passeggero.data_nascita.strftime('%d/%m/%Y') }}</p>
+            {% else %}
+                <p class="profile-name">Passeggero</p>
+                <p class="profile-meta">{{ user.email }}</p>
+            {% endif %}
+        </div>
+
+        {% if tickets %}
+            <h2>🎫 I Miei Biglietti</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Codice Volo</th>
+                        <th>Compagnia</th>
+                        <th>Rotta</th>
+                        <th>Data/Ora Partenza</th>
+                        <th>Data/Ora Arrivo</th>
+                        <th>Posto</th>
+                        <th>Extra</th>
+                        <th>Importo Pagato</th>
+                        <th>Data Acquisto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for biglietto in tickets %}
+                    <tr>
+                        <td>{{ biglietto.volo_rel.codice_volo }}</td>
+                        <td>{{ biglietto.volo_rel.compagnia_rel.nome }}</td>
+                        <td class="route">{{ biglietto.volo_rel.partenza_aeroporto }} → {{ biglietto.volo_rel.arrivo_aeroporto }}</td>
+                        <td>{{ biglietto.volo_rel.orario_partenza.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ biglietto.volo_rel.orario_arrivo.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ biglietto.posto_rel.numero_posto if biglietto.posto_rel else 'N/A' }}</td>
+                        <td class="extras">
+                            {% if biglietto.extra and biglietto.extra|length > 0 %}
+                                {% for x in biglietto.extra %}
+                                    {{ x.nome }} (€{{ '%.2f'|format(x.prezzo) }}){% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="price">€{{ "%.2f"|format(biglietto.importo_pagato) }}</td>
+                        <td>{{ biglietto.data_acquisto.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-tickets">
+                <h2>📭 Nessun Biglietto</h2>
+                <p>Non hai ancora acquistato nessun biglietto.</p>
+                <a href="{{ url_for('main.lista_voli') }}" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Cerca Voli</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

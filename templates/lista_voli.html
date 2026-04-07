@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Voli</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        .login-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .login-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #219a52;
+            color: white;
+            text-decoration: none;
+        }
+        .logout-btn {
+            background: #e74c3c;
+        }
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .content {
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e8f5e8;
+        }
+        .price {
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+        .route {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .flight-code {
+            color: #666;
+            font-size: 14px;
+        }
+        .btn-dettagli {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+        .btn-dettagli:hover {
+            background-color: #1976D2;
+            color: white;
+            text-decoration: none;
+        }
+        /* Nuovi stili per i pulsanti di ordinamento */
+        .sort-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f7ff;
+            border: 1px solid #cfe2ff;
+            border-left: 4px solid #3498db;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin: 12px 0 6px 0;
+        }
+        .sort-label { color: #2c3e50; font-weight: 600; }
+        .sort-btn {
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .sort-btn:hover { background: #2d83bd; }
+        .sort-btn.secondary { background: #95a5a6; }
+        .sort-btn.secondary:hover { background: #7f8c8d; }
+        .sort-btn.active { background: #1abc9c; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{{ url_for('main.home') }}">
+            <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo" style="max-height: 60px;">
+        </a>
+
+        <div class="login-section">
+            {% if session.user_id %}
+                {% if session.user_type == 'passeggero' %}
+                    <a href="{{ url_for('main.profilo') }}" class="login-btn">👤 Profilo</a>
+                {% elif session.user_type == 'compagnia aerea' %}
+                    <a href="{{ url_for('main.statistiche') }}" class="login-btn">📊 Statistiche</a>
+                {% endif %}
+                <a href="{{ url_for('main.logout') }}" class="login-btn logout-btn">🚪 Logout</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="login-btn">👤 Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h1>Lista Voli</h1>
+
+            <!-- Mostra i filtri applicati se presenti -->
+            {% if citta_partenza or citta_arrivo or data_query %}
+            <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                <h3 style="margin: 0 0 10px 0; color: #2c3e50;">🔍 Filtri applicati:</h3>
+                {% if citta_partenza %}
+                    <p style="margin: 5px 0;"><strong>Città di partenza:</strong> {{ citta_partenza }}</p>
+                {% endif %}
+                {% if citta_arrivo %}
+                    <p style="margin: 5px 0;"><strong>Città di arrivo:</strong> {{ citta_arrivo }}</p>
+                {% endif %}
+                {% if data_query %}
+                    <p style="margin: 5px 0;">
+                        <strong>Data di partenza:</strong> {{ data_inizio.strftime('%d/%m/%Y') if data_inizio else data_query }}
+                        <span style="color:#555;">(inclusi i 7 giorni successivi, fino al {{ data_fine_display.strftime('%d/%m/%Y') if data_fine_display else '' }})</span>
+                    </p>
+                {% endif %}
+                <a href="{{ url_for('main.lista_voli') }}" style="color: #3498db; text-decoration: none, font-size: 14px;">✖️ Rimuovi filtri</a>
+            </div>
+            {% endif %}
+
+            {% if voli %}
+                {% if citta_partenza or citta_arrivo or data_query %}
+                    <p style="color: #27ae60; font-weight: bold; margin-bottom: 10px;">
+                        ✅ Trovati {{ voli|length }} voli corrispondenti ai criteri di ricerca
+                    </p>
+                {% endif %}
+
+                <!-- Barra ordinamento: mostrata quando è selezionata una destinazione o partenza -->
+                {% if citta_arrivo or citta_partenza %}
+                <div class="sort-bar">
+                    <span class="sort-label">Ordina per:</span>
+                    <a class="sort-btn {% if sort_by == 'price' %}active{% endif %}"
+                       href="{{ url_for('main.lista_voli', partenza=request.args.get('partenza'), arrivo=request.args.get('arrivo') or request.args.get('dest'), data=request.args.get('data'), sort='price') }}">
+                        💶 Prezzo
+                    </a>
+                    <a class="sort-btn {% if sort_by == 'duration' %}active{% endif %}"
+                       href="{{ url_for('main.lista_voli', partenza=request.args.get('partenza'), arrivo=request.args.get('arrivo') or request.args.get('dest'), data=request.args.get('data'), sort='duration') }}">
+                        ⏱️ Durata
+                    </a>
+                    {% if sort_by %}
+                    <a class="sort-btn secondary"
+                       href="{{ url_for('main.lista_voli', partenza=request.args.get('partenza'), arrivo=request.args.get('arrivo') or request.args.get('dest'), data=request.args.get('data')) }}">
+                        Reset ordinamento
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Codice Volo</th>
+                        <th>Compagnia</th>
+                        <th>Rotta</th>
+                        <th>Partenza</th>
+                        <th>Arrivo</th>
+                        <th>Durata</th>
+                        <th>Economy</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in voli %}
+                        {% if item.type == 'direct' %}
+                            {% set volo, nome_compagnia, modello_aereo, nome_partenza, citta_partenza, nome_arrivo, citta_arrivo = item.flight_info %}
+                            {% set duration = volo.orario_arrivo - volo.orario_partenza %}
+                            <tr>
+                                <td class="flight-code">{{ volo.codice_volo }}</td>
+                                <td>{{ nome_compagnia }}</td>
+                                <td class="route">{{ citta_partenza }} → {{ citta_arrivo }}</td>
+                                <td>{{ volo.orario_partenza.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ volo.orario_arrivo.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td><strong>{{ duration.total_seconds() // 3600 | int }}h {{ (duration.total_seconds() % 3600) // 60 | int }}m</strong></td>
+                                <td class="price">€{{ "%.2f"|format(volo.prezzo_economy) }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.dettaglio_volo', id_volo=volo.id_volo) }}" class="btn-dettagli">
+                                        📋 Dettagli
+                                    </a>
+                                </td>
+                            </tr>
+                        {% elif item.type == 'connection' %}
+                            {% set v1, comp1, _, _, citta_p, _, citta_s = item.flight1_info %}
+                            {% set v2, comp2, _, _, _, _, citta_a = item.flight2_info %}
+                            <tr style="background-color: #fdfde2;">
+                                <td colspan="8" style="padding: 10px; border-bottom: 2px solid #e0e0e0;">
+                                    <div style="font-weight: bold; font-size: 16px; color: #555;">
+                                        ✈️ Volo con scalo a {{ citta_s }}
+                                        <span style="float: right; font-size: 14px;">
+                                            Durata totale: <strong>{{ item.total_duration.total_seconds() // 3600 | int }}h {{ (item.total_duration.total_seconds() % 3600) // 60 | int }}m</strong>
+                                            | Prezzo totale: <strong class="price">€{{ "%.2f"|format(item.total_price) }}</strong>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Dettaglio primo volo -->
+                            <tr>
+                                <td class="flight-code">{{ v1.codice_volo }}</td>
+                                <td>{{ comp1 }}</td>
+                                <td class="route">{{ citta_p }} → {{ citta_s }}</td>
+                                <td>{{ v1.orario_partenza.strftime('%d/%m %H:%M') }}</td>
+                                <td>{{ v1.orario_arrivo.strftime('%d/%m %H:%M') }}</td>
+                                <td>{{ (v1.orario_arrivo - v1.orario_partenza).total_seconds() // 3600 | int }}h {{ ((v1.orario_arrivo - v1.orario_partenza).total_seconds() % 3600) // 60 | int }}m</td>
+                                <td class="price">€{{ "%.2f"|format(v1.prezzo_economy) }}</td>
+                                <td><a href="{{ url_for('main.dettaglio_volo', id_volo=v1.id_volo) }}" class="btn-dettagli" style="font-size:11px;">Dettagli</a></td>
+                            </tr>
+                            <!-- Dettaglio secondo volo -->
+                            <tr>
+                                <td class="flight-code">{{ v2.codice_volo }}</td>
+                                <td>{{ comp2 }}</td>
+                                <td class="route">{{ citta_s }} → {{ citta_a }}</td>
+                                <td>{{ v2.orario_partenza.strftime('%d/%m %H:%M') }}</td>
+                                <td>{{ v2.orario_arrivo.strftime('%d/%m %H:%M') }}</td>
+                                <td>{{ (v2.orario_arrivo - v2.orario_partenza).total_seconds() // 3600 | int }}h {{ ((v2.orario_arrivo - v2.orario_partenza).total_seconds() % 3600) // 60 | int }}m</td>
+                                <td class="price">€{{ "%.2f"|format(v2.prezzo_economy) }}</td>
+                                <td><a href="{{ url_for('main.dettaglio_volo', id_volo=v2.id_volo) }}" class="btn-dettagli" style="font-size:11px;">Dettagli</a></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                {% if citta_partenza or citta_arrivo or data_query %}
+                    <div style="text-align: center; padding: 40px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
+                        <h2 style="color: #856404;">🔍 Nessun volo trovato</h2>
+                        <p style="color: #856404;">Non sono stati trovati voli che corrispondono ai criteri di ricerca:</p>
+                        {% if citta_partenza %}
+                            <p><strong>Partenza:</strong> {{ citta_partenza }}</p>
+                        {% endif %}
+                        {% if citta_arrivo %}
+                            <p><strong>Arrivo:</strong> {{ citta_arrivo }}</p>
+                        {% endif %}
+                        {% if data_query %}
+                            <p><strong>Data di partenza:</strong> {{ data_inizio.strftime('%d/%m/%Y') if data_inizio else data_query }} (fino al {{ data_fine_display.strftime('%d/%m/%Y') if data_fine_display else '' }})</p>
+                        {% endif %}
+                        <div style="margin-top: 20px;">
+                            <a href="{{ url_for('main.lista_voli') }}" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-right: 10px;">Mostra tutti i voli</a>
+                            <a href="{{ url_for('main.home') }}" style="background: #95a5a6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Nuova ricerca</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Nessun volo disponibile al momento.</p>
+                {% endif %}
+            {% endif %}
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ url_for('main.home') }}" style="text-decoration: none; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 4px;">Torna alla Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
